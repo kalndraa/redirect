@@ -1,0 +1,24 @@
+name: Deploy Website to InfinityFree via FTP
+
+on:
+  push:
+    branches:
+      - main  # Trigger otomatis berjalan setiap kali Anda melakukan push ke branch main
+
+jobs:
+  web-deploy:
+    name: FTP Upload Job
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚚 Get latest code from GitHub
+      uses: actions/checkout@v4
+
+    - name: 📂 Sync files to InfinityFree hosting
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_HOST }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./                  # Mengupload seluruh isi folder project Anda
+        server-dir: ./htdocs/          # Folder tujuan wajib di InfinityFree adalah htdocs
