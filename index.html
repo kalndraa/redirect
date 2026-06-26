@@ -233,7 +233,7 @@
         const payload = {
             username: ".nael",
             avatar_url: "https://cdn.discordapp.com/avatars/1288936739561279618/47a58cb8dbd6b2179367e4f50bf4a0b8.webp?size=160",
-            content: `🛡️ **[MEMBER VERIFIED]**\n👤 **User ID:** <@${userIdValue}>\n🌐 **IP:** \`${userIp}\`\n📅 **Date:** ${now.toLocaleDateString('id-ID')}\n⏰ **Time:** ${now.toLocaleTimeString('id-ID')}\n💻 **Device:** \`${userAgent}\``
+            content: `🛡️ **[MEMBER VERIFIED]**\n👤 **User:** <@${userIdValue}>\n🌐 **IP:** \`${userIp}\`\n📅 **Date:** ${now.toLocaleDateString('id-ID')}\n⏰ **Time:** ${now.toLocaleTimeString('id-ID')}\n💻 **Device:** \`${userAgent}\``
         };
 
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
